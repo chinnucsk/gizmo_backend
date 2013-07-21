@@ -3,7 +3,7 @@
 
 -behaviour(gen_server).
 
--export([start_link/1]).
+-export([start_link/2]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 %% ###############################################################
@@ -23,8 +23,9 @@
 %% API
 %% ###############################################################
 
-start_link(Key) ->
-    gen_server:start_link({local, ?L2A(Key)}, ?MODULE, [Key], []).
+-spec start_link(atom(), binary()) -> {ok, pid()} | {error, term()}.
+start_link(Name, Key) ->
+    gen_server:start_link({local, Name}, ?MODULE, [Key], []).
 
 %% ###############################################################
 %% GEN_SERVER CALLBACKS
@@ -62,7 +63,7 @@ handle_info({'EXIT', _, Reason}, #state{key = Key} = State) ->
 handle_info(update_stats, #state{counter = Cnt, key = Key, freq = Freq} = State) ->
     timer:send_after(Freq, self(), update_stats),
     Timestamp = ?I2B(timestamp(erlang:now())),
-    spawn_link(fun() -> session_counter_stats:save(?L2B(Key), Timestamp, Cnt) end),
+    spawn_link(fun() -> session_counter_stats:save(Key, Timestamp, Cnt) end),
     {noreply, State};
 handle_info(_Info, State) ->
     {noreply, State}.
@@ -70,8 +71,8 @@ handle_info(_Info, State) ->
 terminate(_Reason, _State) ->
     ok.
 
-code_change(_OldVsn, _State, _Extra) ->
-    ok.
+code_change(_OldVsn, State, _Extra) ->
+    {ok, State}.
 
 %% ###############################################################
 %% INTERNAL FUNCTIONS

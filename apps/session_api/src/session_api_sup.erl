@@ -1,27 +1,24 @@
--module(http_api_error).
+-module(session_api_sup).
 -author('mkorszun@gmail.com').
 
--export([error/4]).
+-behaviour(supervisor).
+
+-export([start_link/0]).
+-export([init/1]).
 
 %% ###############################################################
-%% INCLUDE
+%% API FUNCTIONS
 %% ###############################################################
 
--include_lib("webmachine/include/webmachine.hrl").
+start_link() ->
+    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 %% ###############################################################
-%% ERROR FORMATTERS
+%% SUPERVISOR CALLBACKS
 %% ###############################################################
 
-error(Reason, Code, ReqData, State) ->
-    {{halt, Code}, error_body(Reason, ReqData), State}.
-
-%% ###############################################################
-%% INTERNAL FUNCTIONS
-%% ###############################################################
-
-error_body(Msg, ReqData) ->
-    wrq:set_resp_body(mochijson2:encode({struct, [{error, Msg}]}), ReqData).
+init([]) ->
+    {ok, { {one_for_one, 5, 10}, []} }.
 
 %% ###############################################################
 %% ###############################################################

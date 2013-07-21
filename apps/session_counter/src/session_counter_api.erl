@@ -10,18 +10,19 @@
 %% ###############################################################
 
 %% @doc Updates session counter for given application
--spec add(string(), pid()) -> ok.
+-spec add(binary(), pid()) -> ok.
 add(Key, SessionProcess) ->
-    supervisor:start_child(session_counter_sup, [Key]),
-    gen_server:cast(?L2A(Key), {add, SessionProcess}).
+    ProcessName = ?B2A(Key),
+    supervisor:start_child(session_counter_sup, [ProcessName, Key]),
+    gen_server:cast(ProcessName, {add, SessionProcess}).
 
 %% @doc Returns list of active sessions in given time period
--spec active_sessions(string(), integer() | undefined, integer() | undefined) ->
+-spec active_sessions(binary(), integer() | undefined, integer() | undefined) ->
     {ok, integer()} | {ok, list()} | {error, term()}.
 active_sessions(Key, Start, End) when is_integer(Start), is_integer(End) ->
     case application_obj:exists(Key) of
         true ->
-            session_counter_stats:read(?L2B(Key), Start, End);
+            session_counter_stats:read(Key, Start, End);
         false ->
             {error, application_not_found}
     end;
@@ -30,7 +31,7 @@ active_sessions(Key, Start, End) when is_integer(Start), is_integer(End) ->
 active_sessions(Key, _, _) ->
     case application_obj:exists(Key) of
         true ->
-            try gen_server:call(?L2A(Key), get_counter) of
+            try gen_server:call(?B2A(Key), get_counter) of
                 Res -> {ok, Res}
             catch
                 exit:{noproc, _} -> {ok, 0};

@@ -23,10 +23,17 @@ clean:
 release:
 	make clean
 	make
-	./rebar generate overlay_vars=${NODE}.config  
+	./rebar generate overlay_vars=${NODE}.config
 
 test:
-	ct_run -pa apps/*/ebin -pa deps/*/ebin -dir apps/*/test/ -logdir tests 
+	ct_run -pa apps/*/ebin -pa deps/*/ebin -dir apps/*/test/ -logdir tests
 
 update_riak_code:
 	riak-admin erl_reload
+
+dialyzer:
+	dialyzer --output_plt .deps_plt --build_plt --apps erts kernel stdlib -r deps
+	dialyzer --fullpath --plt .deps_plt -Wrace_conditions -r ./apps/*/ebin
+
+typer:
+	typer --plt .deps_plt -r deps/*/src deps/*/include ./apps/*/src

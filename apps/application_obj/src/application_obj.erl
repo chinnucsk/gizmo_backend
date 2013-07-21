@@ -14,7 +14,7 @@
 %% ###############################################################
 
 %% @doc Creates new application
--spec create(term()) -> binary().
+-spec create(term()) -> {ok, binary()} | {error, term()}.
 create(Application) ->
     gizmo_backend_utils:db_execute(fun(Connection) ->
         Key = list_to_binary(uuid:to_string(uuid:uuid4())),
@@ -28,7 +28,7 @@ create(Application) ->
     end, monitoring).
 
 %% @doc Checks if given application exists
--spec exists(binary() | string()) -> true | false.
+-spec exists(binary() | string()) -> true | false | {error, term()}.
 exists(Key) when is_list(Key) ->
     exists(list_to_binary(Key));
 exists(Key) when is_binary(Key) ->

@@ -64,8 +64,8 @@ terminate(_, StateName, #state{id = Id, key = Key, start_time = Start, reason = 
     ?INF("Session ~s/~s terminated. Duration: ~p State: ~p Reason: ~p",
         [Key, Id, SessionTime, StateName, Reason]).
 
-code_change(_OldVsn, _StateName, State, _Extra) ->
-    {ok, State}.
+code_change(_OldVsn, StateName, State, _Extra) ->
+    {ok, StateName, State}.
 
 %% ###############################################################
 %% ###############################################################
