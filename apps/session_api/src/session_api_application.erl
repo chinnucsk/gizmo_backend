@@ -35,10 +35,10 @@ from_json(ReqData, State) ->
     case application_obj:create([]) of
         {ok, Key} ->
             Body = mochijson2:encode({struct, [{key, Key}]}),
-            {true, session_api_response:to_json(Body, ReqData), State};
+            {true, session_api_utils:to_json(Body, ReqData), State};
         {error, Reason} ->
             ?ERR("Application key generation failed: ~p", [Reason]),
-            session_api_response:error(internal_error, 500, ReqData, State)
+            {halt, session_api_utils:to_error(internal_error, 500, ReqData), State}
     end.
 
 %% ###############################################################

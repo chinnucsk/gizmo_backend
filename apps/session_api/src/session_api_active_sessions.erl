@@ -3,7 +3,7 @@
 
 -export([init/3, content_types_provided/2]).
 -export([resource_info/0]).
--export([active_sessions_to_json/2]).
+-export([resource_exists/2, active_sessions_to_json/2]).
 
 %% ###############################################################
 %% INCLUDE
@@ -29,6 +29,9 @@ resource_info() ->
 %% RESOURCE
 %% ###############################################################
 
+resource_exists(ReqData, State) ->
+    session_api_utils:application_exists(ReqData, State).
+
 active_sessions_to_json(ReqData, State) ->
     {Key, _} = cowboy_req:binding(application, ReqData),
     {Start, _} = cowboy_req:qs_val(<<"start">>, ReqData, undefined),
@@ -36,12 +39,9 @@ active_sessions_to_json(ReqData, State) ->
     case session_counter_api:active_sessions(Key, ?B2I(Start), ?B2I(End)) of
         {ok, Res} ->
             {mochijson2:encode({struct, [{active_sessions, Res}]}), ReqData, State};
-        {error, application_not_found} ->
-            ?ERR("Read active sessions for ~s: key not found", [Key]),
-            session_api_response:error(application_not_found, 404, ReqData, State);
         {error, Reason} ->
             ?ERR("Read active sessions for ~s: ~p", [Key, Reason]),
-            session_api_response:error(internal_error, 500, ReqData, State)
+            {halt, session_api_utils:to_error(internal_error, 500, ReqData), State}
     end.
 
 %% ###############################################################
